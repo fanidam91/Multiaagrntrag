@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent RAG Operations Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Tailwind or FontAwesome? Let's use custom icons and CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation / Status Bar -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">
+                    <h1>DATABRICKS</h1>
+                    <span>Multi-Agent Operations RAG</span>
+                </div>
+            </div>
+            <div class="system-status">
+                <span class="status-indicator live"></span>
+                <span class="status-label">Agent Engine: Ready</span>
+                <div class="api-key-indicator" id="apiKeyStatus" onclick="toggleApiKeyModal()">
+                    <span class="key-icon">🔑</span>
+                    <span id="keyStatusText">No Gemini Key (Fallback Mode)</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body: Split View -->
+        <div class="main-content">
+            <!-- Left Side: RAG Chat Console -->
+            <section class="panel chat-panel">
+                <div class="panel-header">
+                    <h2>Agent Chat Engine</h2>
+                    <span class="panel-subtitle">Stream reasoning and database actions</span>
+                </div>
+                <div class="chat-thread" id="chatThread">
+                    <!-- Welcome Message -->
+                    <div class="chat-message agent">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-body">
+                            <div class="message-text">
+                                Hello! I am your Multi-Agent RAG Assistant. I am connected to the orders database containing **5,000 active records**.
+                                <br><br>
+                                You can ask me query questions like:
+                                <ul>
+                                    <li>"What is the status of order ORD-1250?"</li>
+                                    <li>"How many orders are in progress?"</li>
+                                    <li>"What is the total revenue of shipped orders?"</li>
+                                    <li>"List orders for John"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <form id="chatForm" onsubmit="handleChatSubmit(event)">
+                        <input type="text" id="userInput" placeholder="Ask the Multi-Agent RAG engine..." autocomplete="off" required>
+                        <button type="submit" id="sendBtn">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Side: Analytics and Data Explorer -->
+            <section class="panel data-panel">
+                <!-- Navigation Tabs -->
+                <div class="panel-tabs">
+                    <button class="tab-btn active" onclick="switchTab('analytics')">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        Analytics Dashboard
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('explorer')">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                        Database Explorer (5K Orders)
+                    </button>
+                </div>
+
+                <!-- Tab 1: Analytics -->
+                <div class="tab-content active" id="analyticsTab">
+                    <!-- Metrics Summary Cards -->
+                    <div class="metrics-grid">
+                        <div class="metric-card glass">
+                            <div class="metric-info">
+                                <span class="metric-label">Total Volume</span>
+                                <h3 class="metric-value" id="metricTotalOrders">-</h3>
+                            </div>
+                            <div class="metric-icon blue">📊</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-info">
+                                <span class="metric-label">Total Sales</span>
+                                <h3 class="metric-value" id="metricTotalSales">$0.00</h3>
+                            </div>
+                            <div class="metric-icon green">💵</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-info">
+                                <span class="metric-label">In Progress (Processing)</span>
+                                <h3 class="metric-value" id="metricProcessingOrders">-</h3>
+                            </div>
+                            <div class="metric-icon orange">⚙️</div>
+                        </div>
+                        <div class="metric-card glass">
+                            <div class="metric-info">
+                                <span class="metric-label">Delivered Orders</span>
+                                <h3 class="metric-value" id="metricDeliveredOrders">-</h3>
+                            </div>
+                            <div class="metric-icon purple">🚚</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <div class="chart-card glass">
+                            <h3>Order Status Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card glass">
+                            <h3>Product Category Sales Breakdown</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card glass span-all">
+                            <h3>Daily Sales Volume (Last 30 Days)</h3>
+                            <div class="chart-container line-chart">
+                                <canvas id="salesLineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Database Explorer Table -->
+                <div class="tab-content" id="explorerTab">
+                    <div class="explorer-filters">
+                        <div class="search-box">
+                            <input type="text" id="dbSearchInput" placeholder="Search customer, ID, city, email..." oninput="handleSearchFilterChange()">
+                        </div>
+                        <div class="status-select">
+                            <select id="dbStatusFilter" onchange="handleSearchFilterChange()">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Refunded">Refunded</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer Name</th>
+                                    <th>Order Date</th>
+                                    <th>Status</th>
+                                    <th>Total Amount</th>
+                                    <th>City</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="pagination-controls">
+                        <span class="pagination-info" id="paginationInfo">Showing 1-50 of 5,000 orders</span>
+                        <div class="pagination-buttons">
+                            <button id="prevPageBtn" class="btn btn-sm" onclick="changePage(-1)">Previous</button>
+                            <button id="nextPageBtn" class="btn btn-sm" onclick="changePage(1)">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Connection Settings Modal -->
+        <div class="modal-overlay" id="apiKeyModal">
+            <div class="modal glass" style="max-width: 540px;">
+                <div class="modal-header">
+                    <h3>Connection & Engine Settings</h3>
+                    <button class="close-btn" onclick="toggleApiKeyModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- LLM Configuration -->
+                    <h4 style="color: var(--accent-indigo); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; border-bottom: 1px solid var(--border-color); padding-bottom:6px; margin-top:5px; margin-bottom:8px;">AI LLM Engine</h4>
+                    <p style="font-size:12px; color: var(--text-secondary); margin-bottom:10px;">Enter your Gemini API key to enable live agentic reasoning (routing, tool use). If empty, runs on local NLP rules.</p>
+                    <div class="input-group" style="margin-bottom:18px;">
+                        <input type="password" id="geminiKeyInput" placeholder="Enter GEMINI_API_KEY...">
+                    </div>
+
+                    <!-- Databricks Configuration -->
+                    <h4 style="color: var(--accent-indigo); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; border-bottom: 1px solid var(--border-color); padding-bottom:6px; margin-top:5px; margin-bottom:8px;">Azure Databricks SQL Warehouse</h4>
+                    <p style="font-size:12px; color: var(--text-secondary); margin-bottom:10px;">Enter SQL Warehouse parameters to query Delta Lake tables. Leave blank to run on local SQLite orders database.</p>
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <input type="text" id="dbHostInput" placeholder="Server Hostname (adb-xxxx.azuredatabricks.net)">
+                    </div>
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <input type="text" id="dbPathInput" placeholder="HTTP Path (/sql/1.0/warehouses/xxxx)">
+                    </div>
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <input type="password" id="dbTokenInput" placeholder="Personal Access Token (dapi-xxxx)">
+                    </div>
+                    
+                    <p class="modal-tip">⚠️ Credentials are saved strictly in your browser's local storage and are only sent with your direct requests.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="toggleApiKeyModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details Modal -->
+        <div class="modal-overlay" id="orderDetailsModal">
+            <div class="modal details-modal glass">
+                <div class="modal-header">
+                    <h3>Order Details: <span id="modalOrderId" class="neon-text">-</span></h3>
+                    <button class="close-btn" onclick="closeDetailsModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="details-grid">
+                        <div class="details-section">
+                            <h4>Customer Info</h4>
+                            <p><strong>Name</strong>: <span id="detailName">-</span></p>
+                            <p><strong>Email</strong>: <span id="detailEmail">-</span></p>
+                            <p><strong>Phone</strong>: <span id="detailPhone">-</span></p>
+                        </div>
+                        <div class="details-section">
+                            <h4>Shipping Address</h4>
+                            <p id="detailAddress">-</p>
+                        </div>
+                        <div class="details-section">
+                            <h4>Logistics</h4>
+                            <p><strong>Carrier</strong>: <span id="detailCarrier">-</span></p>
+                            <p><strong>Tracking #</strong>: <span id="detailTracking" class="code-text">-</span></p>
+                            <p><strong>Est. Delivery</strong>: <span id="detailEstDelivery">-</span></p>
+                        </div>
+                    </div>
+
+                    <div class="items-section">
+                        <h4>Ordered Items</h4>
+                        <table class="detail-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailItemsBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                        <div class="detail-total">
+                            <span>Grand Total:</span>
+                            <span id="detailTotal" class="total-price">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="timeline-section">
+                        <h4>Order Fulfillment History & Agent Logs</h4>
+                        <div class="timeline-container" id="detailTimeline">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Javascript -->
+    <script src="app.js"></script>
+</body>
+</html>
