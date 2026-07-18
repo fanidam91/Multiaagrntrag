@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pandas
+databricks-sql-connector
+google-genai
