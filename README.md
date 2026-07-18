@@ -44,6 +44,40 @@ The portal features a split-pane layout:
 
 ---
 
+## ☁️ Azure Cloud Prerequisites & Setup
+
+To run this project on Azure Databricks, you must set up an **Azure Databricks Workspace** and configure a **Delta Lakehouse** (via Unity Catalog and Azure Data Lake Storage Gen2).
+
+### 1. Create an Azure Databricks Workspace
+1. Log in to the [Azure Portal](https://portal.azure.com/).
+2. Click **Create a resource** -> Search for **Azure Databricks** -> Click **Create**.
+3. Configure the Workspace:
+   - **Subscription & Resource Group**: Select your active subscription and resource group.
+   - **Workspace Name**: e.g., `adb-ops-workspace`.
+   - **Region**: Select your closest region (e.g., `East US`).
+   - **Pricing Tier**: Select **Premium (required for Unity Catalog / Lakehouse governance)**.
+4. Click **Review + Create** -> **Create**. Once deployed, click **Launch Workspace** to open your Databricks environment.
+
+### 2. Configure Your Lakehouse Storage (ADLS Gen2)
+1. In the Azure Portal, click **Create a resource** -> Search for **Storage Account** -> Click **Create**.
+2. Configure the Storage Account:
+   - **Storage Account Name**: e.g., `adlsopsstore` (must be lowercase and globally unique).
+   - **Advanced Tab**: **Check the box "Enable hierarchical namespace"** (This is what converts a standard blob storage into **Azure Data Lake Storage Gen2**).
+3. Click **Review + Create** -> **Create**.
+4. Once deployed, open the Storage Account -> Click **Containers** -> Click **+ Container** and name it `unity-catalog-container`.
+
+### 3. Initialize Unity Catalog Metastore
+1. In the Azure Databricks Workspace, click your email in the top-right -> Select **Manage Account** (this opens the Databricks Account Console).
+2. Click **Data** in the left sidebar -> Click **Create Metastore**.
+3. Configure the Metastore:
+   - **Name**: e.g., `my-unity-metastore`.
+   - **Region**: Must match your workspace region.
+   - **ADLS Gen2 path**: Enter the path to your storage container: `abfss://unity-catalog-container@adlsopsstore.dfs.core.windows.net/`.
+4. Click **Create** and select your workspace to assign the metastore.
+5. In your workspace's Catalog Explorer, you will now see Unity Catalog enabled, permitting tables under your catalog path `adb_core_data_dev_aue.default.orders`.
+
+---
+
 ## 🛠️ Local Installation & Setup
 
 1. **Install Dependencies**:
