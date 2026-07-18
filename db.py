@@ -1,3 +1,6 @@
+import subprocess, sys
+subprocess.check_call([sys.executable, "-m", "pip", "install", "faker"])
+
 import sqlite3
 import json
 import random
