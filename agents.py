@@ -305,7 +305,7 @@ Rules:
             
             # Request content from model
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-flash-latest',
                 contents=chat_contents,
                 config=types.GenerateContentConfig(
                     tools=[get_order_details, search_orders, get_analytics_summary, run_read_only_sql_query],
