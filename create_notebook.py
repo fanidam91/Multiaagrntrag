@@ -223,11 +223,12 @@ notebook = {
     "    StructField(\"support_notes\", StringType(), True)\n",
     "])\n",
     "\n",
-    "# 1. Read Stream from the raw CSV landing directory\n",
+    "# 1. Read Stream from the raw CSV landing directory (WITH RECURSIVE LOOKUP ENABLED!)\n",
     "stream_reader = (\n",
     "    spark.readStream\n",
     "    .format(\"csv\")\n",
     "    .option(\"header\", \"true\")\n",
+    "    .option(\"recursiveFileLookup\", \"true\")\n",
     "    .schema(csv_schema)\n",
     "    .load(\"/tmp/orders_raw/\")\n",
     ")\n",
@@ -460,8 +461,8 @@ notebook = {
    "source": [
     "# COMMAND ----------\n",
     "import time\n",
-    "from google import genai\n",
-    "from google.genai import types\n",
+    "import json\n",
+    "import re\n",
     "\n",
     "def run_agent_fallback(user_query: str):\n",
     "    \"\"\"Local rule/NLP fallback if no Gemini key is provided.\"\"\"\n",
@@ -506,6 +507,9 @@ notebook = {
     "\n",
     "def run_agent_gemini(user_query: str, api_key: str):\n",
     "    \"\"\"Gemini Orchestrator executing live tool calls over the Delta table.\"\"\"\n",
+    "    from google import genai\n",
+    "    from google.genai import types\n",
+    "    \n",
     "    client = genai.Client(api_key=api_key)\n",
     "    tool_map = {\n",
     "        \"get_order_details\": get_order_details,\n",
@@ -552,34 +556,6 @@ notebook = {
     "            return run_agent_fallback(user_query)\n",
     "    else:\n",
     "        return run_agent_fallback(user_query)"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "### Step 8: Test the Multi-Agent RAG Interface"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": None,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# COMMAND ----------\n",
-    "# Enter your Gemini API key below to test the agentic reasoning, or leave as None for local SQL fallback.\n",
-    "GEMINI_API_KEY = None \n",
-    "\n",
-    "# Test 1: Analytics query\n",
-    "response1 = query_databricks_rag(\"How many orders are processing (in progress)?\", GEMINI_API_KEY)\n",
-    "print(\"\\n--- Agent Response 1 ---\")\n",
-    "print(response1)\n",
-    "\n",
-    "# Test 2: Order Lookup\n",
-    "response2 = query_databricks_rag(\"What is the status of order ORD-1025?\", GEMINI_API_KEY)\n",
-    "print(\"\\n--- Agent Response 2 ---\")\n",
-    "print(response2)"
    ]
   }
  ],
