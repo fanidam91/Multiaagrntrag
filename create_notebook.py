@@ -525,7 +525,7 @@ notebook = {
     "    chat_contents = [prompt]\n",
     "    for _ in range(5):\n",
     "        response = client.models.generate_content(\n",
-    "            model='gemini-2.5-flash',\n",
+    "            model='gemini-1.5-flash',\n",
     "            contents=chat_contents,\n",
     "            config=types.GenerateContentConfig(\n",
     "                tools=[get_order_details, search_orders, get_analytics_summary, run_read_only_sql_query],\n",
