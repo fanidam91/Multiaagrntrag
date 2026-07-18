@@ -288,15 +288,17 @@ function renderOrdersTable(orders) {
         const tr = document.createElement("tr");
         tr.onclick = () => openOrderDetails(o.order_id);
         
-        const statusClass = o.status.toLowerCase();
+        const statusClass = o.status ? o.status.toLowerCase() : "pending";
+        const dateStr = o.order_date ? String(o.order_date).substring(0, 16) : "";
+        const totalVal = typeof o.total_amount === 'number' ? o.total_amount.toFixed(2) : '0.00';
         
         tr.innerHTML = `
-            <td><strong style="color: var(--accent-indigo)">${o.order_id}</strong></td>
-            <td>${o.customer_name}</td>
-            <td>${o.order_date.substring(0, 16)}</td>
-            <td><span class="badge ${statusClass}">${o.status}</span></td>
-            <td><strong>$${o.total_amount.toFixed(2)}</strong></td>
-            <td>${o.city}</td>
+            <td><strong style="color: var(--accent-indigo)">${o.order_id || ""}</strong></td>
+            <td>${o.customer_name || ""}</td>
+            <td>${dateStr}</td>
+            <td><span class="badge ${statusClass}">${o.status || "Pending"}</span></td>
+            <td><strong>$${totalVal}</strong></td>
+            <td>${o.city || ""}</td>
         `;
         tbody.appendChild(tr);
     });

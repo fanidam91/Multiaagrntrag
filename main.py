@@ -96,7 +96,16 @@ def execute_query(request: Request, sql: str, params=None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- API Endpoints ---
+@app.on_event("startup")
+def startup_event():
+    if not os.path.exists(DB_FILE):
+        print("Local database orders.db not found. Seeding database automatically...")
+        try:
+            import db
+            db.generate_data()
+            print("Database seeded successfully.")
+        except Exception as e:
+            print(f"Error seeding database: {str(e)}")
 
 @app.get("/api/orders")
 def get_orders(
